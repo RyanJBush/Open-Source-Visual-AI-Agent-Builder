@@ -59,15 +59,16 @@ The planner indexes IDs, checks edge endpoints and degrees, and follows outgoing
 | Input / template / rendered prompt | 2,048 / 1,024 / 3,072 UTF-16 code units |
 | Model output | 128 UTF-16 code units, nonblank text |
 | Work per run | Four nodes, one model call, no retries |
+| Provider calls per process | At most 1 unsettled call. A run that finds a call still running (for example, one abandoned after a timeout) fails Model without calling the provider. |
 | Time | 3 s body-read deadline, 2 s executor deadline, 750 ms maximum model wait |
 | HTTP | IPv4 loopback only, exact Host, same-origin browser requests, fixed asset paths, JSON-only POST, up to 16 connections |
 
-HTTP requests have separate ingress and execution budgets. The server also configures a 3 s header timeout and a 6 s HTTP request timeout. A failed step keeps its error, marks subsequent steps skipped, and returns a null final output. The run deadline is checked between nodes. The model timer signals cancellation and bounds the awaited result. JavaScript timers cannot preempt blocking code. Milestone 1 contains one trusted, bounded, in-process stub. A real adapter will need transport-level cancellation.
+HTTP requests have separate ingress and execution budgets. The server also configures a 3 s header timeout and a 6 s HTTP request timeout. A failed step keeps its error, marks subsequent steps skipped, and returns a null final output. The run deadline is checked between nodes. The model timer signals cancellation and bounds the awaited result. The in-flight slot is released only when the provider's own promise settles, so a provider that ignores cancellation blocks later runs instead of stacking calls; one that never settles blocks them until restart. JavaScript timers cannot preempt blocking code. Milestone 1 contains one trusted, bounded, in-process stub. A real adapter will need transport-level cancellation.
 
 ## Scope and limitations
 
 - The classifier scans the rendered prompt in a fixed order and returns `billing`, `account`, `technical` or `other`. The example shows reproducibility. There is no development/evaluation result or model-quality claim.
-- The process reads no provider credentials. The contract rejects credential fields, unknown provider settings, endpoint fields and tools. It rejects several recognizable credential patterns in IDs and text. Free text can still contain an unrecognizable secret. Use synthetic text only. Exported workflows and displayed traces contain plain text.
+- The process reads no provider credentials. The contract rejects credential fields, unknown provider settings, endpoint fields and tools. It rejects several recognizable credential patterns in IDs, in each text field, and in the rendered prompt, so a pattern split across the template and the input is also rejected before any call. Free text can still contain an unrecognizable secret. Use synthetic text only. Exported workflows and displayed traces contain plain text.
 - The visual workspace supports one linear graph with four required node types. One workflow lives in the current tab. Saving JSON is explicit. The CLI reads just the file supplied by the operator.
 - The local service is designed for one trusted user. Applications running on the same computer can invoke it. There is no per-user authentication or deployment configuration.
 - Real inference, held-out scoring, hosted CI and the remaining MVP are pending independent review.

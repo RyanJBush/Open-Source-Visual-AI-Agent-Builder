@@ -37,6 +37,12 @@ const invalid = {
   'tool config': w => w.nodes[2].config.tools = [],
   'credential field': w => w.nodes[2].config.api_key = 'synthetic',
   'credential expression': w => w.nodes[0].config.text = 'api_key=synthetic',
+  // Each half passes the per-field screen; the rendered prompt the provider would receive does not.
+  'split sk- key across template and input': w => { w.nodes[1].config.template = 'Key: sk-{{input}}'; w.nodes[0].config.text = 'proj-'+'A'.repeat(24); },
+  'split GitHub token': w => { w.nodes[1].config.template = 'Token gh{{input}}'; w.nodes[0].config.text = 'p_'+'A'.repeat(28); },
+  'split AWS key ID': w => { w.nodes[1].config.template = 'id AK{{input}}'; w.nodes[0].config.text = 'IAABCDEFGHIJKLMNOP'; },
+  'split bearer header': w => { w.nodes[1].config.template = 'Authorization: Bear{{input}}'; w.nodes[0].config.text = 'er abc.def.ghi'; },
+  'split password expression': w => { w.nodes[1].config.template = 'pass{{input}}'; w.nodes[0].config.text = 'word: hunter2'; },
   'non-finite coordinate': w => w.nodes[1].position.x = Infinity,
   'extra position member': w => w.nodes[1].position.url = 'synthetic'
 };
@@ -96,9 +102,38 @@ for (const [name,provider] of Object.entries(failures)) {
     assert.doesNotMatch(JSON.stringify(r),/private provider diagnostic/);
   });
 }
-test('never-resolving provider receives cancellation and a bounded result',async () => {
-  let signal; const r = await execute(fixture(),(_p,_c,s) => { signal = s; return new Promise(() => {}); });
-  assert.equal(signal.aborted,true); assert.match(r.steps[2].error,/timed out/); assert.equal(r.steps[3].state,'skipped');
+test('split credential is rejected by the shared validator the editor uses',() => {
+  const w = fixture(); w.nodes[1].config.template = 'Key: sk-{{input}}'; w.nodes[0].config.text = 'proj-'+'A'.repeat(24);
+  assert.throws(() => parseWorkflow(JSON.stringify(w)),/Rendered prompt contains credential-like text/);
+});
+// A provider that ignores its abort signal and settles late. A never-settling one would hold the
+// in-flight slot for the rest of this process by design, so tests use a finite delay.
+const ignoresAbort = (ms,log) => (_p,_c,s) => { log.signal = s; log.invoked = (log.invoked ?? 0) + 1; return new Promise(res => setTimeout(() => { log.settled = true; res('billing'); },ms)); };
+test('timed-out call is cancelled, and later runs fail closed until the abandoned call settles',async () => {
+  const log = {};
+  const first = await execute(fixture(),ignoresAbort(LIMIT.callMs+300,log));
+  assert.equal(log.signal.aborted,true); assert.match(first.steps[2].error,/timed out/); assert.equal(first.steps[3].state,'skipped');
+  assert.equal(log.settled,undefined,'abandoned call is still running');
+  let invoked = 0;
+  const blocked = await execute(fixture(),async () => { invoked++; return 'billing'; });
+  assert.equal(invoked,0); assert.equal(blocked.calls,0); assert.equal(blocked.status,'failed');
+  assert.match(blocked.steps[2].error,/still running/); assert.equal(blocked.steps[3].state,'skipped');
+  await new Promise(res => setTimeout(res,400));
+  assert.equal(log.settled,true);
+  assert.equal((await execute(fixture())).status,'succeeded','slot released after the provider settles');
+});
+test('concurrent runs never have more than one provider call in flight',async () => {
+  const log = {};
+  const runs = await Promise.all(Array.from({length:5},() => execute(fixture(),ignoresAbort(LIMIT.callMs+200,log))));
+  assert.equal(log.invoked,1);
+  assert.deepEqual(runs.map(r => r.calls).sort(),[0,0,0,0,1]);
+  assert.equal(runs.filter(r => /still running/.test(r.steps[2].error)).length,4);
+  await new Promise(res => setTimeout(res,300));
+  assert.equal((await execute(fixture())).status,'succeeded');
+});
+test('synchronously throwing provider releases its in-flight slot',async () => {
+  for (let i = 0; i < 3; i++) assert.equal((await execute(fixture(),() => { throw new Error('sync'); })).steps[2].error,'Stub provider failed.');
+  assert.equal((await execute(fixture())).status,'succeeded');
 });
 test('actual CLI result equals executor result',async () => {
   const p = spawnSync(process.execPath,['cli.mjs','examples/support.json'],{encoding:'utf8'});

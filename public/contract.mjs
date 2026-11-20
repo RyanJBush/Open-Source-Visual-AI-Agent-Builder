@@ -1,5 +1,5 @@
 export const TYPES = ['input', 'prompt', 'model', 'output'];
-export const LIMIT = Object.freeze({ bytes: 32768, input: 2048, template: 1024, prompt: 3072, output: 128, runMs: 2000, callMs: 750, calls: 1, bodyMs: 3000 });
+export const LIMIT = Object.freeze({ bytes: 32768, input: 2048, template: 1024, prompt: 3072, output: 128, runMs: 2000, callMs: 750, calls: 1, inFlight: 1, bodyMs: 3000 });
 export const LABEL = { input: 'Input', prompt: 'Prompt Template', model: 'Model', output: 'Output' };
 export class Invalid extends Error {}
 function requireThat(condition, message) {
@@ -10,9 +10,17 @@ function record(value, keys, label) {
   requireThat(Object.keys(value).length === keys.length && keys.every(k => Object.hasOwn(value,k)), label + ' fields must be exactly ' + (keys.join(', ') || '(empty)') + '.');
 }
 const idPattern = /^[a-zA-Z][a-zA-Z0-9_-]{0,39}$/;
+const credentialPattern = /(?:-----BEGIN [^-\n]*PRIVATE KEY-----|\bBearer\s+\S+|\b(?:api[_ -]?key|password|access[_ -]?token|secret)\s*[:=]\s*\S+|\b(?:sk-(?:ant-|proj-)?[A-Za-z0-9_-]{16,}|gh[pousr]_[A-Za-z0-9]{20,}|AKIA[A-Z0-9]{16}))/i;
+function credentialFree(value, label) {
+  requireThat(!credentialPattern.test(value), label + ' contains credential-like text. Use synthetic data.');
+}
 function textField(value, max, label) {
   requireThat(typeof value === 'string' && value.trim() && value.length <= max, label + ' requires 1–' + max + ' characters.');
-  requireThat(!/(?:-----BEGIN [^-\n]*PRIVATE KEY-----|\bBearer\s+\S+|\b(?:api[_ -]?key|password|access[_ -]?token|secret)\s*[:=]\s*\S+|\b(?:sk-(?:ant-|proj-)?[A-Za-z0-9_-]{16,}|gh[pousr]_[A-Za-z0-9]{20,}|AKIA[A-Z0-9]{16}))/i.test(value), label + ' contains credential-like text. Use synthetic data.');
+  credentialFree(value, label);
+}
+// The exact text the provider receives. Shared by plan() and the executor so both screen the same string.
+export function render(template, input) {
+  return template.replace('{{input}}', () => input);
 }
 function inspectNode(n) {
   record(n, Object.hasOwn(n ?? {},'position') ? ['id','type','config','position'] : ['id','type','config'], 'Node');
@@ -74,6 +82,10 @@ export function plan(workflow) {
   }
   requireThat(ordered.length === 4,'The workflow has a disconnected node or cycle.');
   requireThat(ordered.every((n,i) => n.type === TYPES[i]),'Connect Input → Prompt Template → Model → Output.');
+  // Per-field screening misses credentials split across the template and the input, so screen the joined prompt too.
+  const prompt = render(ordered[1].config.template, ordered[0].config.text);
+  requireThat(prompt.length <= LIMIT.prompt, 'Rendered prompt exceeds ' + LIMIT.prompt + ' characters.');
+  credentialFree(prompt, 'Rendered prompt');
   return ordered;
 }
 export function parseWorkflow(raw) {
