@@ -1,0 +1,16 @@
+{
+  "name": "relay-visual-agent-builder",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "scripts": {
+    "start": "node server.mjs",
+    "demo": "node cli.mjs examples/support.json",
+    "test": "node --test tests/core.test.mjs tests/server.test.mjs",
+    "test:browser": "node tests/browser.mjs"
+  }
+}
