@@ -112,6 +112,6 @@ node evaluation/run.mjs dev
 node evaluation/run.mjs heldout
 ```
 
-On POSIX shells prefix each invocation with `RELAY_ENABLE_OLLAMA=1`. Both splits use local inference. The default `npm test` suite does not require a model or network connection. After checkout and Node setup, the GitHub Actions verification step runs the tests and deterministic CLI demo in a separate Linux network namespace with a clean environment. A runtime check verifies namespace separation before either command runs.
+On POSIX shells prefix each invocation with `RELAY_ENABLE_OLLAMA=1`. Both splits use local inference. The default `npm test` suite does not require a model or network connection. After checkout and Node setup, the workflow is configured to run npm test and the deterministic CLI demo in a separate Linux network namespace with a clean environment. A runtime check verifies namespace separation before either command runs. Verification on a GitHub-hosted Ubuntu 24.04 runner is pending.
 
 [Architecture notes](docs/architecture.md) · [Environment, licenses and reuse decisions](docs/environment.md) · [MIT license](LICENSE)
