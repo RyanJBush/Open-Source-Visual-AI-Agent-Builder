@@ -1,4 +1,5 @@
-import { LIMIT, plan, render } from './public/contract.mjs';
+import { LIMIT, plan, providerSpec, render } from './public/contract.mjs';
+import { createOllama, ProviderError } from './ollama.mjs';
 
 export async function stub(prompt, {mode}) {
   if (mode === 'simulate-failure') throw new Error('Simulated provider failure.');
@@ -9,15 +10,17 @@ export async function stub(prompt, {mode}) {
   ];
   return rules.find(([, pattern]) => pattern.test(prompt))?.[0] ?? 'other';
 }
+// Adapters keyed by the workflow's validated provider name. admit() returns a refusal message
+// (disabled, misconfigured, budget used up) and is checked before any slot or call is consumed.
+const adapters = { 'local-stub': {call: stub}, 'ollama': createOllama() };
 class BoundaryError extends Error {}
 // Process-wide count of provider calls whose promise has not settled. A timed-out run returns
 // while a provider that ignores its abort signal keeps working, so the slot is released only
 // when the provider's own promise settles. A provider that never settles keeps the slot, and
 // later runs fail closed instead of stacking abandoned calls.
 let inFlight = 0;
-async function callModel(provider, prompt, config, remaining) {
+async function callModel(provider, prompt, config, budget) {
   const controller = new AbortController();
-  const budget = Math.min(LIMIT.callMs, remaining);
   const end = performance.now() + budget;
   let timer, released = false;
   inFlight++;
@@ -41,9 +44,15 @@ async function callModel(provider, prompt, config, remaining) {
     clearTimeout(timer);
   }
 }
-export async function execute(workflow, provider = stub) {
-  const deadline = performance.now() + LIMIT.runMs;
+// provider: omitted to use the adapter named by the workflow, a function (prompt, config, signal)
+// for tests, or an adapter object {call, admit?}.
+export async function execute(workflow, provider) {
+  const start = performance.now();
   const nodes = plan(workflow);
+  const model = nodes.find(n => n.type === 'model').config;
+  const spec = providerSpec(model.provider);
+  const adapter = typeof provider === 'function' ? {call: provider} : provider ?? adapters[model.provider];
+  const deadline = start + spec.runMs;
   const steps = nodes.map(({id,type}) => ({id,type,state:'skipped'}));
   let value, calls = 0;
   for (const [i,node] of nodes.entries()) {
@@ -56,22 +65,25 @@ export async function execute(workflow, provider = stub) {
           value = render(node.config.template, value);
           if (value.length > LIMIT.prompt) throw new BoundaryError('Rendered prompt is too large.');
           break;
-        case 'model':
+        case 'model': {
           if (calls >= LIMIT.calls) throw new BoundaryError('Model-call limit exceeded.');
+          const refusal = adapter.admit?.();
+          if (refusal) throw new ProviderError(refusal);
           // No await between this check and callModel's increment, so concurrent runs cannot both pass it.
           if (inFlight >= LIMIT.inFlight) throw new BoundaryError('Another model call is still running. Try again shortly.');
           calls++;
-          value = await callModel(provider,value,node.config,remaining);
+          value = await callModel(adapter.call,value,node.config,Math.min(spec.callMs,remaining));
           break;
+        }
         case 'output': break;
       }
       steps[i].state = 'succeeded';
       steps[i].text = value;
     } catch (err) {
       steps[i].state = 'failed';
-      steps[i].error = err instanceof BoundaryError ? err.message : 'Stub provider failed.';
-      return {status:'failed',provider:'local-stub',calls,steps,output:null};
+      steps[i].error = err instanceof BoundaryError || err instanceof ProviderError ? err.message : spec.name + ' provider failed.';
+      return {status:'failed',provider:model.provider,calls,steps,output:null};
     }
   }
-  return {status:'succeeded',provider:'local-stub',calls,steps,output:value};
+  return {status:'succeeded',provider:model.provider,calls,steps,output:value};
 }

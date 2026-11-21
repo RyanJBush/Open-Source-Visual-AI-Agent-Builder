@@ -1,5 +1,15 @@
 export const TYPES = ['input', 'prompt', 'model', 'output'];
-export const LIMIT = Object.freeze({ bytes: 32768, input: 2048, template: 1024, prompt: 3072, output: 128, runMs: 2000, callMs: 750, calls: 1, inFlight: 1, bodyMs: 3000 });
+export const LIMIT = Object.freeze({ bytes: 32768, input: 2048, template: 1024, prompt: 3072, output: 128, runMs: 2000, callMs: 750, calls: 1, inFlight: 1, bodyMs: 3000, clientMs: 18000 });
+// Allowlisted providers. Endpoints are never part of a workflow; the server decides where a provider runs.
+// Time limits are per provider: Ollama needs room for a cold model load (about 7.5 s measured for qwen3:4b).
+export const LABELS = Object.freeze(['billing', 'account', 'technical', 'other']);
+export const PROVIDERS = Object.freeze({
+  'local-stub': Object.freeze({ name: 'Stub', short: 'stub', models: Object.freeze(['support-v1']), modes: Object.freeze(['classify', 'simulate-failure']), callMs: LIMIT.callMs, runMs: LIMIT.runMs }),
+  'ollama': Object.freeze({ name: 'Ollama', short: 'local Ollama', models: Object.freeze(['qwen3:4b']), modes: Object.freeze(['classify']), callMs: 15000, runMs: 16000 })
+});
+export function providerSpec(name) {
+  return typeof name === 'string' && Object.hasOwn(PROVIDERS, name) ? PROVIDERS[name] : undefined;
+}
 export const LABEL = { input: 'Input', prompt: 'Prompt Template', model: 'Model', output: 'Output' };
 export class Invalid extends Error {}
 function requireThat(condition, message) {
@@ -42,11 +52,13 @@ function inspectNode(n) {
       textField(c.template,LIMIT.template,'Template');
       requireThat(c.template.split('{{input}}').length === 2 && !/[{}]/.test(c.template.replace('{{input}}','')), 'Use {{input}} exactly once. Other braces or placeholders are unsupported.');
       break;
-    case 'model':
+    case 'model': {
       record(c,['provider','model','mode'],'Model configuration');
-      requireThat(c.provider === 'local-stub' && c.model === 'support-v1', 'Only local-stub / support-v1 is available.');
-      requireThat(['classify','simulate-failure'].includes(c.mode),'Unknown stub mode.');
+      const spec = providerSpec(c.provider);
+      requireThat(spec && spec.models.includes(c.model), 'Choose ' + Object.entries(PROVIDERS).map(([p,s]) => p + ' / ' + s.models.join(', ')).join(' or ') + '.');
+      requireThat(spec.modes.includes(c.mode), 'Mode must be ' + spec.modes.join(' or ') + ' for ' + c.provider + '.');
       break;
+    }
     case 'output': record(c,[],'Output configuration');
   }
 }

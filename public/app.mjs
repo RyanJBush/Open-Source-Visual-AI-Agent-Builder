@@ -1,8 +1,10 @@
-import {LABEL, LIMIT, TYPES, parseWorkflow, plan} from './contract.mjs';
+import {LABEL, LIMIT, PROVIDERS, TYPES, parseWorkflow, plan, providerSpec} from './contract.mjs';
 
 const $ = id => document.getElementById(id);
 const icons = {input:'↳',prompt:'{ }',model:'✧',output:'↗'};
-const descriptions = {input:'Text request',prompt:'Literal template',model:'support-v1 · stub',output:'Text result'};
+const descriptions = {input:'Text request',prompt:'Literal template',output:'Text result'};
+const describe = n => n.type !== 'model' ? descriptions[n.type] : n.config.model + ' · ' + (providerSpec(n.config.provider)?.short ?? 'unknown provider');
+const modeNames = {'classify':'Classify request','simulate-failure':'Simulate provider failure'};
 const defaults = [{x:42,y:50},{x:315,y:50},{x:315,y:225},{x:586,y:225}];
 let workflow, selected, source, revision = 0, running = false, scale = 1, fit = true, overview = false;
 const position = n => n.position ?? defaults[TYPES.indexOf(n.type)];
@@ -120,7 +122,7 @@ function draw() {
     glyph.setAttribute('aria-hidden','true');
     const main = button('',() => selectNode(n.id),'node-main');
     main.setAttribute('aria-label','Inspect '+LABEL[n.type]);
-    main.append(el('span','node-name',LABEL[n.type]),el('span','node-desc',descriptions[n.type]));
+    main.append(el('span','node-name',LABEL[n.type]),el('span','node-desc',describe(n)));
     box.append(glyph,main);
     for (const side of ['in','out']) {
       if ((side === 'in' && n.type === 'input') || (side === 'out' && n.type === 'output')) continue;
@@ -140,7 +142,7 @@ function draw() {
 function inspector() {
   const n = workflow.nodes.find(node => node.id === selected);
   const panel = $('inspector');
-  panel.replaceChildren(el('span','glyph '+n.type,icons[n.type]),el('h3','',LABEL[n.type]),el('p','hint',n.id+' · '+descriptions[n.type]));
+  panel.replaceChildren(el('span','glyph '+n.type,icons[n.type]),el('h3','',LABEL[n.type]),el('p','hint',n.id+' · '+describe(n)));
   if (n.type === 'input' || n.type === 'prompt') {
     const input = n.type === 'input', key = input ? 'text' : 'template';
     const field = el('textarea'), label = el('label','',input ? 'Synthetic request' : 'Prompt template');
@@ -149,12 +151,26 @@ function inspector() {
     field.oninput = () => { n.config[key] = field.value; changed(); };
     panel.append(label,field,el('p','hint',input ? 'Use synthetic text without credentials.' : 'Insert {{input}} once to include the request.'));
   } else if (n.type === 'model') {
-    const label = el('label','','Stub behavior'), mode = el('select');
+    const spec = providerSpec(n.config.provider);
+    const providerLabel = el('label','','Provider'), provider = el('select');
+    provider.id = 'provider'; providerLabel.htmlFor = provider.id;
+    for (const [p,s] of Object.entries(PROVIDERS)) provider.add(new Option(s.name+' · '+s.models[0],p));
+    provider.value = n.config.provider;
+    provider.onchange = () => {
+      const next = PROVIDERS[provider.value];
+      n.config.provider = provider.value; n.config.model = next.models[0];
+      if (!next.modes.includes(n.config.mode)) n.config.mode = next.modes[0];
+      changed(); draw();
+    };
+    const label = el('label',''), mode = el('select');
+    label.textContent = n.config.provider === 'local-stub' ? 'Stub behavior' : 'Behavior';
     mode.id = 'mode'; label.htmlFor = mode.id;
-    for (const [v,t] of [['classify','Classify request'],['simulate-failure','Simulate provider failure']]) mode.add(new Option(t,v));
+    for (const v of spec?.modes ?? []) mode.add(new Option(modeNames[v],v));
     mode.value = n.config.mode;
     mode.onchange = () => { n.config.mode = mode.value; changed(); };
-    panel.append(label,mode,el('p','hint','Local deterministic provider. One call per run.'));
+    const hint = n.config.provider === 'local-stub' ? 'Local deterministic provider. One call per run.'
+      : 'Runs on this computer through Ollama. The server must be started with RELAY_ENABLE_OLLAMA=1. One call per run.';
+    panel.append(providerLabel,provider,label,mode,el('p','hint',hint));
   } else panel.append(el('p','hint','Returns the text received from the model.'));
   panel.append(el('div','subhead','Connections'));
   const links = workflow.edges.filter(e => e.from === n.id || e.to === n.id);
@@ -170,7 +186,7 @@ function inspector() {
   }
 }
 function trace(result) {
-  $('run-state').textContent = result.status + ' · '+result.calls+' stub call';
+  $('run-state').textContent = result.status + ' · '+result.calls+' model call'+(result.calls === 1 ? '' : 's')+' · '+(providerSpec(result.provider)?.short ?? result.provider);
   const list = el('div','steps');
   for (const step of result.steps) {
     const item = el('div','step '+step.state);
@@ -183,7 +199,7 @@ $('run').onclick = async () => {
   const rev = revision;
   running = true; validate(); notice(); $('run-state').textContent = 'Running…';
   try {
-    const response = await fetch('/api/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(workflow),signal:AbortSignal.timeout(7000)});
+    const response = await fetch('/api/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(workflow),signal:AbortSignal.timeout(LIMIT.clientMs)});
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'Request failed.');
     if (rev === revision) trace(data);
