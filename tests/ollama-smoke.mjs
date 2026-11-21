@@ -18,12 +18,12 @@ try {
     if (text) w.nodes.find(n => n.type === 'input').config.text = text;
     const file = join(dir, 'w.json'); writeFileSync(file, JSON.stringify(w));
     const t = performance.now();
-    const p = spawnSync(process.execPath, [fileURLToPath(new URL('../cli.mjs', import.meta.url)), file], {encoding: 'utf8', env});
+    const p = spawnSync(process.execPath, [fileURLToPath(new URL('../cli.mjs', import.meta.url)), file], {encoding: 'utf8', env, timeout: 22000, killSignal: 'SIGKILL'});
     const ms = Math.round(performance.now() - t);
     let r; try { r = JSON.parse(p.stdout); } catch { r = null; }
     const ok = p.status === 0 && r?.provider === 'ollama' && r.calls === 1 && LABELS.includes(r.output);
     if (!ok) failed++;
-    console.log(`${ok ? 'PASS' : 'FAIL'} ${name}: exit=${p.status} provider=${r?.provider} calls=${r?.calls} output=${r?.output ?? null} wall=${ms}ms${ok ? '' : ' ' + (r?.steps?.find(s => s.error)?.error ?? p.stderr.trim())}`);
+    console.log(`${ok ? 'PASS' : 'FAIL'} ${name}: exit=${p.status} provider=${r?.provider} calls=${r?.calls} output=${r?.output ?? null} wall=${ms}ms${ok ? '' : ' ' + (r?.steps?.find(s => s.error)?.error ?? p.error?.message ?? p.stderr?.trim() ?? 'CLI did not finish')}`);
   }
 } finally { rmSync(dir, {recursive: true, force: true}); }
 process.exitCode = failed ? 1 : 0;

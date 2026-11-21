@@ -1,0 +1,34 @@
+[
+  {
+    "id": "dev-01",
+    "request": "My card was charged twice for one renewal."
+  },
+  {
+    "id": "dev-02",
+    "request": "The invoice is missing our apartment number."
+  },
+  {
+    "id": "dev-03",
+    "request": "My login is locked."
+  },
+  {
+    "id": "dev-04",
+    "request": "I forgot my password and need a reset."
+  },
+  {
+    "id": "dev-05",
+    "request": "The app crashes when I open settings."
+  },
+  {
+    "id": "dev-06",
+    "request": "Every search returns an error."
+  },
+  {
+    "id": "dev-07",
+    "request": "Is there a store in Toronto?"
+  },
+  {
+    "id": "dev-08",
+    "request": "Where can I read your release notes?"
+  }
+]

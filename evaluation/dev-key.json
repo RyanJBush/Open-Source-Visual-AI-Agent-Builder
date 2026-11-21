@@ -1,0 +1,10 @@
+{
+  "dev-01": "billing",
+  "dev-02": "billing",
+  "dev-03": "account",
+  "dev-04": "account",
+  "dev-05": "technical",
+  "dev-06": "technical",
+  "dev-07": "other",
+  "dev-08": "other"
+}

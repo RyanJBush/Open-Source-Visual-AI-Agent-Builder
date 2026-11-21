@@ -10,8 +10,9 @@
   "scripts": {
     "start": "node server.mjs",
     "demo": "node cli.mjs examples/support.json",
-    "test": "node --test tests/core.test.mjs tests/server.test.mjs tests/ollama.test.mjs",
+    "test": "node --test tests/core.test.mjs tests/server.test.mjs tests/ollama.test.mjs tests/evaluation.test.mjs",
     "test:browser": "node tests/browser.mjs",
-    "smoke:ollama": "node tests/ollama-smoke.mjs"
+    "smoke:ollama": "node tests/ollama-smoke.mjs",
+    "evaluate": "node evaluation/run.mjs"
   }
 }

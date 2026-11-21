@@ -8,7 +8,7 @@ import {Invalid, LABELS} from '../public/contract.mjs';
 
 const workflow = () => JSON.parse(readFileSync(new URL('../examples/support-ollama.json',import.meta.url)));
 const enabled = extra => ({RELAY_ENABLE_OLLAMA:'1',...extra});
-const reply = (content,status = 200) => ({ok:status >= 200 && status < 300,status,text:async () => JSON.stringify({message:{role:'assistant',content}})});
+const reply = (content,status = 200) => new Response(JSON.stringify({message:{role:'assistant',content}}),{status});
 function fake(respond = () => reply('"billing"')) {
   const log = [];
   const fetchImpl = async (url,init) => { log.push({url,init,body:JSON.parse(init.body)}); return respond(url,init); };
@@ -65,8 +65,8 @@ const failures = {
   'server error': [() => reply('',500),/HTTP 500/],
   'unrecognized label': [() => reply('"refunds"'),/unrecognized label/],
   'unconstrained text': [() => reply('We are given a support request'),/unreadable/],
-  'malformed body': [() => ({ok:true,status:200,text:async () => '<html>'}),/unreadable/],
-  'oversized body': [() => ({ok:true,status:200,text:async () => 'x'.repeat(70000)}),/too large/]
+  'malformed body': [() => new Response('<html>'),/unreadable/],
+  'oversized body': [() => new Response('x'.repeat(70000)),/too large/]
 };
 for (const [name,[respond,pattern]] of Object.entries(failures)) {
   test(name+' fails Model with a specific message and skips Output',async () => {
@@ -88,4 +88,21 @@ test('workflow cannot select an unlisted model, a stub-only mode or a prototype 
     await assert.rejects(execute(w,async () => { calls++; return 'billing'; }),Invalid);
     assert.equal(calls,0);
   }
+});
+
+test('stream limit stops the reader on the first byte over 64 KiB', async () => {
+  let pulls = 0, cancelled = false;
+  const stream = new ReadableStream({
+    pull(controller) {
+      pulls++;
+      controller.enqueue(new Uint8Array(pulls === 1 ? 65536 : 1));
+    },
+    cancel() { cancelled = true; }
+  }, {highWaterMark:0});
+  const adapter = createOllama({env:enabled(),fetchImpl:async () => new Response(stream)});
+  const r = await execute(workflow(),adapter);
+  assert.equal(pulls,2);
+  assert.equal(cancelled,true);
+  assert.match(r.steps[2].error,/too large/);
+  assert.equal(r.steps[3].state,'skipped');
 });

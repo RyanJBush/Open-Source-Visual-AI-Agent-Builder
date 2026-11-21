@@ -1,5 +1,5 @@
 import { LIMIT, plan, providerSpec, render } from './public/contract.mjs';
-import { createOllama, ProviderError } from './ollama.mjs';
+import { createOllama, InvalidReply, ProviderError } from './ollama.mjs';
 
 export async function stub(prompt, {mode}) {
   if (mode === 'simulate-failure') throw new Error('Simulated provider failure.');
@@ -81,6 +81,7 @@ export async function execute(workflow, provider) {
       steps[i].text = value;
     } catch (err) {
       steps[i].state = 'failed';
+      if (err instanceof InvalidReply) steps[i].errorCode = 'invalid-response';
       steps[i].error = err instanceof BoundaryError || err instanceof ProviderError ? err.message : spec.name + ' provider failed.';
       return {status:'failed',provider:model.provider,calls,steps,output:null};
     }

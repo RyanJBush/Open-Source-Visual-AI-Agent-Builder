@@ -2,12 +2,34 @@ import {LABELS} from './public/contract.mjs';
 
 // A provider failure whose message is safe to show in traces. Any other error is reported generically.
 export class ProviderError extends Error {}
+export class InvalidReply extends ProviderError {}
 
 const LOOPBACK = new Set(['127.0.0.1', 'localhost', '[::1]']);
 const SYSTEM = 'You label customer support requests. Labels: billing (charges, invoices, refunds, payments), ' +
   'account (login, password, sign-in, locked account), technical (crashes, errors, bugs), other (anything else). ' +
   'Reply with the single label only.';
-const MAX_RESPONSE_CHARS = 65536;
+const MAX_RESPONSE_BYTES = 65536;
+async function readReply(response) {
+  if (!response.body) throw new InvalidReply('Ollama returned an unreadable response.');
+  const reader = response.body.getReader();
+  let size = 0;
+  const chunks = [];
+  try {
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > MAX_RESPONSE_BYTES) {
+        await reader.cancel();
+        throw new InvalidReply('Ollama response is too large.');
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  return Buffer.concat(chunks, size).toString('utf8');
+}
 
 // Opt-in adapter for a local Ollama server. Settings come from the server's environment, never from a workflow:
 //   RELAY_ENABLE_OLLAMA=1         required; otherwise every call is refused before any request
@@ -46,18 +68,20 @@ export function createOllama({env = process.env, fetchImpl = (...args) => fetch(
             messages: [{role: 'system', content: SYSTEM}, {role: 'user', content: prompt}]
           })
         });
-        text = await response.text();
+        if (!response.ok) {
+          await response.body?.cancel();
+          if (response.status === 404) throw new ProviderError('Ollama does not have ' + config.model + '. Run: ollama pull ' + config.model);
+          throw new ProviderError('Ollama returned HTTP ' + response.status + '.');
+        }
+        text = await readReply(response);
       } catch (err) {
-        if (signal.aborted) throw err;
+        if (signal.aborted || err instanceof ProviderError) throw err;
         throw new ProviderError('Ollama is not reachable at ' + host + '. Start it with: ollama serve');
       }
-      if (response.status === 404) throw new ProviderError('Ollama does not have ' + config.model + '. Run: ollama pull ' + config.model);
-      if (!response.ok) throw new ProviderError('Ollama returned HTTP ' + response.status + '.');
-      if (text.length > MAX_RESPONSE_CHARS) throw new ProviderError('Ollama response is too large.');
       let label;
       try { label = JSON.parse(JSON.parse(text).message.content); }
-      catch { throw new ProviderError('Ollama returned an unreadable response.'); }
-      if (!LABELS.includes(label)) throw new ProviderError('Ollama returned an unrecognized label.');
+      catch { throw new InvalidReply('Ollama returned an unreadable response.'); }
+      if (!LABELS.includes(label)) throw new InvalidReply('Ollama returned an unrecognized label.');
       return label;
     }
   };
