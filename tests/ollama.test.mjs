@@ -106,3 +106,19 @@ test('stream limit stops the reader on the first byte over 64 KiB', async () => 
   assert.match(r.steps[2].error,/too large/);
   assert.equal(r.steps[3].state,'skipped');
 });
+
+test('an explicitly empty Ollama origin is a configuration error',async () => {
+  const f = fake();
+  const r = await execute(workflow(),createOllama({env:enabled({RELAY_OLLAMA_URL:''}),fetchImpl:f.fetchImpl}));
+  assert.equal(f.log.length,0);
+  assert.equal(r.calls,0);
+  assert.match(r.steps[2].error,/RELAY_OLLAMA_URL/);
+});
+test('the Ollama message content must be a string before its label is decoded',async () => {
+  const f = fake(() => reply(['"billing"']));
+  const r = await execute(workflow(),createOllama({env:enabled(),fetchImpl:f.fetchImpl}));
+  assert.equal(r.status,'failed');
+  assert.equal(r.steps[2].errorCode,'invalid-response');
+  assert.equal(r.steps[3].state,'skipped');
+  assert.equal(r.output,null);
+});

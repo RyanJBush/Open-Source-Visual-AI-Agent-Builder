@@ -60,6 +60,8 @@ The Model node can use `provider: "ollama"`, `model: "qwen3:4b"`, `mode: "classi
 | `RELAY_OLLAMA_URL` | `http://127.0.0.1:11434` | Plain `http` origin on `127.0.0.1`, `localhost` or `[::1]` only; anything else is refused |
 | `RELAY_OLLAMA_MAX_CALLS` | `50` | Calls allowed per server or CLI process; later runs fail Model without a request until restart |
 
+An unset origin uses the default. An explicitly empty origin is refused. Each CLI process starts with a fresh call budget, so an exhausted editor server can refuse JSON that succeeds in the CLI. Compare traces with matching available budgets and provider settings.
+
 The adapter sends the rendered prompt as the user message with a fixed system instruction listing the four labels, and constrains the reply to `billing`, `account`, `technical` or `other` with Ollama's JSON-schema `format`. Temperature is 0 with a fixed seed; repeated runs are expected but not guaranteed to match. The request's abort signal cancels the HTTP call, so a timeout frees the in-flight slot. Unreachable server, missing model, HTTP errors, unreadable or unrecognized replies fail Model with a specific message and skip Output.
 
 ## Workflow format and execution
@@ -82,7 +84,7 @@ The planner indexes IDs, checks edge endpoints and degrees, and follows outgoing
 | Model output | 128 UTF-16 code units, nonblank text |
 | Work per run | Four nodes, one model call, no retries |
 | Provider calls per process | At most 1 unsettled call. A run that finds a call still running (for example, one abandoned after a timeout) fails Model without calling the provider. |
-| Time | 3 s body-read deadline. Stub: 2 s executor deadline, 750 ms maximum model wait. Ollama: 16 s executor deadline, 15 s maximum model wait (a cold `qwen3:4b` load measured about 7.5 s; warm calls 130–250 ms). The editor waits up to 18 s for a response. |
+| Time | 3 s body-read deadline. Stub: 2 s executor deadline, 750 ms maximum model wait. Ollama: 16 s executor deadline, 15 s maximum model wait (a cold `qwen3:4b` load measured about 7.5 s; warm calls 130–250 ms). These are cooperative deadlines. The event loop can deliver cancellation slightly late. The editor waits up to 18 s for a response. |
 | Ollama calls | Opt-in per process, loopback only, `RELAY_OLLAMA_MAX_CALLS` per process (default 50) |
 | HTTP | IPv4 loopback only, exact Host, same-origin browser requests, fixed asset paths, JSON-only POST, up to 16 connections |
 

@@ -4,7 +4,7 @@ import {LABELS} from './public/contract.mjs';
 export class ProviderError extends Error {}
 export class InvalidReply extends ProviderError {}
 
-const LOOPBACK = new Set(['127.0.0.1', 'localhost', '[::1]']);
+const LOCAL_ORIGIN = /^http:\/\/(?:127\.0\.0\.1|localhost|\[::1\])(?::\d+)?\/?$/i;
 const SYSTEM = 'You label customer support requests. Labels: billing (charges, invoices, refunds, payments), ' +
   'account (login, password, sign-in, locked account), technical (crashes, errors, bugs), other (anything else). ' +
   'Reply with the single label only.';
@@ -41,11 +41,12 @@ export function createOllama({env = process.env, fetchImpl = (...args) => fetch(
   let used = 0;
   function settings() {
     if (env.RELAY_ENABLE_OLLAMA !== '1') return {refusal: 'Ollama is disabled. Restart Relay with RELAY_ENABLE_OLLAMA=1 to allow local model calls.'};
-    let origin;
-    try { origin = new URL(env.RELAY_OLLAMA_URL || 'http://127.0.0.1:11434'); }
-    catch { return {refusal: 'RELAY_OLLAMA_URL is not a valid URL.'}; }
-    if (origin.protocol !== 'http:' || !LOOPBACK.has(origin.hostname) || origin.username || origin.password || origin.pathname !== '/' || origin.search || origin.hash)
+    const configured = env.RELAY_OLLAMA_URL ?? 'http://127.0.0.1:11434';
+    if (typeof configured !== 'string' || configured.trim() !== configured || !LOCAL_ORIGIN.test(configured))
       return {refusal: 'RELAY_OLLAMA_URL must be a plain http loopback origin such as http://127.0.0.1:11434.'};
+    let origin;
+    try { origin = new URL(configured); }
+    catch { return {refusal: 'RELAY_OLLAMA_URL is not a valid URL.'}; }
     const raw = env.RELAY_OLLAMA_MAX_CALLS ?? '50';
     if (!/^\d{1,6}$/.test(raw)) return {refusal: 'RELAY_OLLAMA_MAX_CALLS must be a whole number.'};
     if (used >= Number(raw)) return {refusal: 'Ollama call budget for this process is used up (' + Number(raw) + '). Restart Relay to reset it.'};
@@ -79,7 +80,11 @@ export function createOllama({env = process.env, fetchImpl = (...args) => fetch(
         throw new ProviderError('Ollama is not reachable at ' + host + '. Start it with: ollama serve');
       }
       let label;
-      try { label = JSON.parse(JSON.parse(text).message.content); }
+      try {
+        const content = JSON.parse(text)?.message?.content;
+        if (typeof content !== 'string') throw new TypeError('Expected text content.');
+        label = JSON.parse(content);
+      }
       catch { throw new InvalidReply('Ollama returned an unreadable response.'); }
       if (!LABELS.includes(label)) throw new InvalidReply('Ollama returned an unrecognized label.');
       return label;
