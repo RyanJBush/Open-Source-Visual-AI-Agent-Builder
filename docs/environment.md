@@ -1,23 +1,6 @@
-# Milestone 1 environment and reuse audit
+# Environment, licenses and reuse
 
-Checked November 20, 2026 on the Windows workstation. Its start directory contained empty work and outputs directories and was outside a Git repository. No on-disk AGENTS.md appeared on the current directory's ancestor path. The instructions supplied in the task apply. C:\workspace did not exist.
-
-## Checkout discovery
-
-Searched the user's Documents, Desktop, Downloads, OneDrive, code, Projects, CLionProjects, llm-gateway and ai-agent-course trees by project-name patterns and Git configuration. The search skipped dependency trees, hidden directories and common generated trees. It found several reference-project checkouts and unrelated voice-agent skill directories. No matching Project 16 checkout appeared. The connected GitHub repository search for `user:RyanJBush visual` also returned zero matches. Neither search establishes absence elsewhere. A new local `main` repository was initialized under `work/relay`. No remote was configured.
-
-## Tools and access
-
-| Check | Observed result |
-| --- | --- |
-| Python | 3.13.7 default, 3.12 also registered |
-| Installed Python libraries | FastAPI 0.162.0, Pydantic 2.13.5, Uvicorn 0.53.0, pytest 9.2.0, HTTPX 0.28.1 |
-| Node / npm / pnpm / Git | 22.19.0 / 10.9.3 / 10.34.7 / 2.55.0.windows.5 |
-| Frontend tooling | React, React Flow, Vite and TypeScript were unavailable at the inspected user-level Node resolution root. npm cache lookup returned no React Flow entry. |
-| Browser tooling | Chrome, Edge and user-level playwright-core 1.63.0 were located. Verification used Chrome. |
-| Ollama | CLI 0.40.16. Local manifests for qwen3:4b, qwen3-coder:latest, granite3.2-vision:2b and embeddinggemma:latest. `ollama list` could not connect to 127.0.0.1:11434 in this sandbox. Model readiness is unverified. |
-| Credentials | ANTHROPIC_API_KEY was populated. OPENAI_API_KEY, GROQ_API_KEY, GEMINI_API_KEY, GOOGLE_API_KEY and HF_TOKEN were absent from the checked process environment. Values were never printed. Usability, billing and account permissions were not tested. |
-| Networking | Binding a loopback listener succeeded. Python's client socket was denied with WinError 10013. Chrome's live HTTP navigation returned ERR_NETWORK_ACCESS_DENIED. The shell GitHub API request could not connect. The connected GitHub interface provided repository files. |
+The implementation began as a fresh local checkout. No code was copied from the three earlier projects below. The release was tested on Windows with Node 22.19.0, npm 10.9.3, Playwright Core 1.63.0, Chrome 158.0.8127.36 and local Ollama 0.40.16. No paid provider credentials are required.
 
 ## Dependency decision
 
@@ -29,6 +12,14 @@ The four-card editor uses DOM controls and vector connectors. Node serves the st
 | Application packages | None | No frontend or backend package installation. Node's built-in test runner handles the core suite. |
 | playwright-core | 1.63.0, optional test-only | Apache-2.0 per the installed package metadata. No browser binaries are redistributed. [Upstream license](https://github.com/microsoft/playwright/blob/main/LICENSE) |
 | Google Chrome | Installed browser, version in verification output | Vendor-distributed browser, separate from this source package. |
+
+Additional components used by the MVP:
+
+| Component | Version or identity | License and role |
+| --- | --- | --- |
+| Ollama | 0.40.16 | MIT, separately installed optional inference service. [License](https://github.com/ollama/ollama/blob/main/LICENSE) |
+| qwen3:4b | Q4_K_M, digest 359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7 | Local model metadata returned Apache License 2.0. Weights are obtained separately. |
+| actions/checkout, actions/setup-node | Exact commit SHAs in the CI workflow | Both are MIT. Used to bootstrap the hosted runner. Core checks have zero package-install steps and run offline. |
 
 Original project source is offered under MIT. No third-party source, fonts, images, browser builds or provider packages are bundled.
 

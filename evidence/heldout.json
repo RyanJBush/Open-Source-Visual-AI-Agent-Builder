@@ -1,0 +1,530 @@
+{
+  "split": "heldout",
+  "synthetic": true,
+  "node": "v22.19.0",
+  "platform": "win32",
+  "model": {
+    "name": "qwen3:4b",
+    "digest": "359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+    "ollamaVersion": "0.40.16"
+  },
+  "cost": {
+    "externalApiCalls": 0,
+    "measuredDollars": null
+  },
+  "inputs": {
+    "engine.mjs": "0e6104be28b63a1de835f6fc06364758552e6b320191bd8e384e9b335b3864df",
+    "ollama.mjs": "b6bc9999c318d2223fec6123c56e7ac8a99eb033c3a3ae6da0231ab0a6c9b4a1",
+    "public/contract.mjs": "d18a618a8669b931decfe663ef215e646f45b85b78eba282e5156c8e5ebfb1a4",
+    "evaluation/run.mjs": "6ce9cf5a9de1c4b0f84db2660a4ba83b39577b03718376f5da2df601a8dd2ef8",
+    "evaluation/score.mjs": "ff49dac71bb81b846b068010ddbc0c5098bdd51812d792684dbd4bd9c2c18100",
+    "evaluation/heldout.json": "10237833a68e34ec107e30510ae04bd7f3b4019d54f739688a57d1b58168ba5e",
+    "evaluation/heldout-key.json": "d86f438d91837ab999fbe795674e6c3fbfba1bd161a231e0bff1815f881fd823",
+    "examples/support.json": "7d7a290f7624469df36fbb9bbecd7a9e447438a99ec86ad35b971b294ffe1599",
+    "examples/support-ollama.json": "fe80ab423b0772881e00c9ceb942bec34c545347561fefed8614fbae4858725d"
+  },
+  "summary": {
+    "local-stub": {
+      "correct": 16,
+      "total": 24,
+      "invalid": 0,
+      "abstentions": 0,
+      "failures": 0,
+      "medianMs": 0.063,
+      "p95Ms": 0.29,
+      "calls": 24
+    },
+    "ollama": {
+      "correct": 16,
+      "total": 24,
+      "invalid": 0,
+      "abstentions": 0,
+      "failures": 0,
+      "medianMs": 142.874,
+      "p95Ms": 182.799,
+      "calls": 24
+    }
+  },
+  "rows": [
+    {
+      "id": "heldout-01",
+      "provider": "local-stub",
+      "expected": "account",
+      "predicted": "account",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 1.231,
+      "error": null
+    },
+    {
+      "id": "heldout-01",
+      "provider": "ollama",
+      "expected": "account",
+      "predicted": "account",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 311.275,
+      "error": null
+    },
+    {
+      "id": "heldout-02",
+      "provider": "local-stub",
+      "expected": "billing",
+      "predicted": "billing",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 0.29,
+      "error": null
+    },
+    {
+      "id": "heldout-02",
+      "provider": "ollama",
+      "expected": "billing",
+      "predicted": "billing",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 142.243,
+      "error": null
+    },
+    {
+      "id": "heldout-03",
+      "provider": "local-stub",
+      "expected": "other",
+      "predicted": "other",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 0.225,
+      "error": null
+    },
+    {
+      "id": "heldout-03",
+      "provider": "ollama",
+      "expected": "other",
+      "predicted": "billing",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 161.126,
+      "error": null
+    },
+    {
+      "id": "heldout-04",
+      "provider": "local-stub",
+      "expected": "technical",
+      "predicted": "other",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 0.127,
+      "error": null
+    },
+    {
+      "id": "heldout-04",
+      "provider": "ollama",
+      "expected": "technical",
+      "predicted": "technical",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 137.943,
+      "error": null
+    },
+    {
+      "id": "heldout-05",
+      "provider": "local-stub",
+      "expected": "billing",
+      "predicted": "billing",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 0.139,
+      "error": null
+    },
+    {
+      "id": "heldout-05",
+      "provider": "ollama",
+      "expected": "billing",
+      "predicted": "billing",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 134.093,
+      "error": null
+    },
+    {
+      "id": "heldout-06",
+      "provider": "local-stub",
+      "expected": "account",
+      "predicted": "other",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 0.068,
+      "error": null
+    },
+    {
+      "id": "heldout-06",
+      "provider": "ollama",
+      "expected": "account",
+      "predicted": "billing",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 162.463,
+      "error": null
+    },
+    {
+      "id": "heldout-07",
+      "provider": "local-stub",
+      "expected": "technical",
+      "predicted": "technical",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 0.075,
+      "error": null
+    },
+    {
+      "id": "heldout-07",
+      "provider": "ollama",
+      "expected": "technical",
+      "predicted": "technical",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 132.625,
+      "error": null
+    },
+    {
+      "id": "heldout-08",
+      "provider": "local-stub",
+      "expected": "other",
+      "predicted": "other",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 0.072,
+      "error": null
+    },
+    {
+      "id": "heldout-08",
+      "provider": "ollama",
+      "expected": "other",
+      "predicted": "other",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 127.595,
+      "error": null
+    },
+    {
+      "id": "heldout-09",
+      "provider": "local-stub",
+      "expected": "account",
+      "predicted": "account",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 0.116,
+      "error": null
+    },
+    {
+      "id": "heldout-09",
+      "provider": "ollama",
+      "expected": "account",
+      "predicted": "billing",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 143.505,
+      "error": null
+    },
+    {
+      "id": "heldout-10",
+      "provider": "local-stub",
+      "expected": "billing",
+      "predicted": "other",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 0.065,
+      "error": null
+    },
+    {
+      "id": "heldout-10",
+      "provider": "ollama",
+      "expected": "billing",
+      "predicted": "billing",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 136.044,
+      "error": null
+    },
+    {
+      "id": "heldout-11",
+      "provider": "local-stub",
+      "expected": "technical",
+      "predicted": "other",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 0.057,
+      "error": null
+    },
+    {
+      "id": "heldout-11",
+      "provider": "ollama",
+      "expected": "technical",
+      "predicted": "billing",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 164.014,
+      "error": null
+    },
+    {
+      "id": "heldout-12",
+      "provider": "local-stub",
+      "expected": "other",
+      "predicted": "other",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 0.056,
+      "error": null
+    },
+    {
+      "id": "heldout-12",
+      "provider": "ollama",
+      "expected": "other",
+      "predicted": "billing",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 131.878,
+      "error": null
+    },
+    {
+      "id": "heldout-13",
+      "provider": "local-stub",
+      "expected": "billing",
+      "predicted": "billing",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 0.058,
+      "error": null
+    },
+    {
+      "id": "heldout-13",
+      "provider": "ollama",
+      "expected": "billing",
+      "predicted": "billing",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 129.056,
+      "error": null
+    },
+    {
+      "id": "heldout-14",
+      "provider": "local-stub",
+      "expected": "account",
+      "predicted": "other",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 0.055,
+      "error": null
+    },
+    {
+      "id": "heldout-14",
+      "provider": "ollama",
+      "expected": "account",
+      "predicted": "account",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 182.799,
+      "error": null
+    },
+    {
+      "id": "heldout-15",
+      "provider": "local-stub",
+      "expected": "other",
+      "predicted": "other",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 0.067,
+      "error": null
+    },
+    {
+      "id": "heldout-15",
+      "provider": "ollama",
+      "expected": "other",
+      "predicted": "billing",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 164.651,
+      "error": null
+    },
+    {
+      "id": "heldout-16",
+      "provider": "local-stub",
+      "expected": "technical",
+      "predicted": "other",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 0.06,
+      "error": null
+    },
+    {
+      "id": "heldout-16",
+      "provider": "ollama",
+      "expected": "technical",
+      "predicted": "technical",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 115.933,
+      "error": null
+    },
+    {
+      "id": "heldout-17",
+      "provider": "local-stub",
+      "expected": "billing",
+      "predicted": "other",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 0.063,
+      "error": null
+    },
+    {
+      "id": "heldout-17",
+      "provider": "ollama",
+      "expected": "billing",
+      "predicted": "billing",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 172.144,
+      "error": null
+    },
+    {
+      "id": "heldout-18",
+      "provider": "local-stub",
+      "expected": "account",
+      "predicted": "account",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 0.058,
+      "error": null
+    },
+    {
+      "id": "heldout-18",
+      "provider": "ollama",
+      "expected": "account",
+      "predicted": "account",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 135.471,
+      "error": null
+    },
+    {
+      "id": "heldout-19",
+      "provider": "local-stub",
+      "expected": "other",
+      "predicted": "other",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 0.062,
+      "error": null
+    },
+    {
+      "id": "heldout-19",
+      "provider": "ollama",
+      "expected": "other",
+      "predicted": "billing",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 163.674,
+      "error": null
+    },
+    {
+      "id": "heldout-20",
+      "provider": "local-stub",
+      "expected": "technical",
+      "predicted": "technical",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 0.062,
+      "error": null
+    },
+    {
+      "id": "heldout-20",
+      "provider": "ollama",
+      "expected": "technical",
+      "predicted": "technical",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 178.865,
+      "error": null
+    },
+    {
+      "id": "heldout-21",
+      "provider": "local-stub",
+      "expected": "billing",
+      "predicted": "billing",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 0.055,
+      "error": null
+    },
+    {
+      "id": "heldout-21",
+      "provider": "ollama",
+      "expected": "billing",
+      "predicted": "billing",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 136.735,
+      "error": null
+    },
+    {
+      "id": "heldout-22",
+      "provider": "local-stub",
+      "expected": "other",
+      "predicted": "other",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 0.057,
+      "error": null
+    },
+    {
+      "id": "heldout-22",
+      "provider": "ollama",
+      "expected": "other",
+      "predicted": "billing",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 148.017,
+      "error": null
+    },
+    {
+      "id": "heldout-23",
+      "provider": "local-stub",
+      "expected": "account",
+      "predicted": "other",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 0.056,
+      "error": null
+    },
+    {
+      "id": "heldout-23",
+      "provider": "ollama",
+      "expected": "account",
+      "predicted": "account",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 165.305,
+      "error": null
+    },
+    {
+      "id": "heldout-24",
+      "provider": "local-stub",
+      "expected": "technical",
+      "predicted": "technical",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 0.055,
+      "error": null
+    },
+    {
+      "id": "heldout-24",
+      "provider": "ollama",
+      "expected": "technical",
+      "predicted": "technical",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 133.812,
+      "error": null
+    }
+  ]
+}

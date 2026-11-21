@@ -12,6 +12,10 @@ node server.mjs
 
 Open [the local editor](http://127.0.0.1:4316). Use the literal address shown. Port 4316 must be free. Stop the server with Ctrl+C. The server does not persist edits. Export before refreshing or closing the page.
 
+## Editor walkthrough
+
+![Relay editor showing a disconnected graph, real Ollama execution, JSON replay and a simulated provider failure](docs/relay-demo.gif)
+
 ## Two-minute demo
 
 1. Select **Run workflow**. The duplicated-charge fixture produces `billing`. The trace displays the input, rendered prompt, model response and final text in traversal order.
@@ -39,6 +43,8 @@ npm run test:browser
 ```
 
 The default check starts a server on an ephemeral loopback port, drives Chrome, saves the exported file, invokes the actual CLI on that file, and imports it again. For environments with restricted sockets, `node tests/browser.mjs --in-process` drives Chrome through the same HTTP handler using Playwright routing. In this mode the test verifies the browser's download event, suggested filename and serialized payload, and writes those bytes to a temporary file for replay. Add `--check-download` to also require Chrome's native download manager to save the file. Desktop and 390-pixel layouts are exercised. The headless test cleans up its temporary directory and closes the browser.
+
+On Windows, if Chrome cancels the native save, try setting both TEMP and TMP to a writable local scratch folder for that test process. This resolved the issue in the verified run.
 
 ## Local Ollama adapter (opt-in)
 
@@ -80,14 +86,30 @@ The planner indexes IDs, checks edge endpoints and degrees, and follows outgoing
 | Ollama calls | Opt-in per process, loopback only, `RELAY_OLLAMA_MAX_CALLS` per process (default 50) |
 | HTTP | IPv4 loopback only, exact Host, same-origin browser requests, fixed asset paths, JSON-only POST, up to 16 connections |
 
-HTTP requests have separate ingress and execution budgets. The server also configures a 3 s header timeout and a 6 s HTTP request timeout. A failed step keeps its error, marks subsequent steps skipped, and returns a null final output. The run deadline is checked between nodes. The model timer signals cancellation and bounds the awaited result. The in-flight slot is released only when the provider's own promise settles, so a provider that ignores cancellation blocks later runs instead of stacking calls; one that never settles blocks them until restart. JavaScript timers cannot preempt blocking code. Milestone 1 contains one trusted, bounded, in-process stub. A real adapter will need transport-level cancellation.
+HTTP requests have separate ingress and execution budgets. The server also configures a 3 s header timeout and a 6 s HTTP request timeout. A failed step keeps its error, marks subsequent steps skipped, and returns a null final output. The run deadline is checked between nodes. The model timer signals cancellation and bounds the awaited result. The in-flight slot is released only when the provider's own promise settles, so a provider that ignores cancellation blocks later runs instead of stacking calls; one that never settles blocks them until restart. JavaScript timers cannot preempt blocking code. Ollama fetch receives the abort signal. Successful provider response bodies are capped at 65,536 bytes while reading.
 
 ## Scope and limitations
 
-- The stub classifier scans the rendered prompt in a fixed order and returns `billing`, `account`, `technical` or `other`. The example shows reproducibility. There is no development/evaluation result or model-quality claim for the stub or for Ollama. An informal 6-request check during development had `qwen3:4b` mislabel 2 requests as `billing`; a held-out comparison against the keyword baseline is still to do.
+- The keyword classifier recognizes a fixed set of words. The local model is restricted to four labels. Both can return a plausible but incorrect label. The small synthetic evaluation below describes only the frozen cases.
 - The process reads no provider credentials; the Ollama adapter needs none. The contract rejects credential fields, unknown provider settings, endpoint fields and tools. It rejects several recognizable credential patterns in IDs, in each text field, and in the rendered prompt, so a pattern split across the template and the input is also rejected before any call. Free text can still contain an unrecognizable secret. Use synthetic text only. Exported workflows and displayed traces contain plain text.
 - The visual workspace supports one linear graph with four required node types. One workflow lives in the current tab. Saving JSON is explicit. The CLI reads just the file supplied by the operator.
 - The local service is designed for one trusted user. Applications running on the same computer can invoke it. There is no per-user authentication or deployment configuration.
-- Held-out scoring, hosted CI and the remaining MVP are pending. Real inference is limited to the opt-in local Ollama adapter.
+- The four-step path, four labels and trusted local workload define the scope. Production accuracy, multi-user isolation and deployment are outside this release.
 
-[Environment, licenses and reuse decisions](docs/environment.md) · [MIT license](LICENSE)
+## Measured synthetic results
+
+The keyword baseline and qwen3:4b each classified **16 of 24** frozen held-out requests correctly (66.7%). Each method got six requests right that the other missed. The local model recovered more billing and technical paraphrases, while the keyword fallback correctly classified more general questions. There were zero invalid replies, execution failures or abstentions. Median executor latency was **0.063 ms** for the baseline and **142.874 ms** for Ollama on this workstation. No external API was called. Energy and dollar cost were unmeasured.
+
+See [per-class results and example errors](docs/evaluation.md), [the frozen protocol](evaluation/PROTOCOL.md) and [per-case evidence](evidence/heldout.json).
+
+To reproduce after installing the local model, run the following commands from the repository root in PowerShell. The commands print JSON. PowerShell 7 or a UTF-8 redirect can be used to save a separate run.
+
+```powershell
+$env:RELAY_ENABLE_OLLAMA='1'
+node evaluation/run.mjs dev
+node evaluation/run.mjs heldout
+```
+
+On POSIX shells prefix each invocation with `RELAY_ENABLE_OLLAMA=1`. Both splits use local inference. The default `npm test` suite does not require a model or network connection. GitHub Actions is configured to run it and the deterministic CLI demo on push and pull request.
+
+[Architecture notes](docs/architecture.md) · [Environment, licenses and reuse decisions](docs/environment.md) · [MIT license](LICENSE)

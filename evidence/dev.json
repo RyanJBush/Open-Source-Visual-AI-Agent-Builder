@@ -1,0 +1,210 @@
+{
+  "split": "dev",
+  "synthetic": true,
+  "node": "v22.19.0",
+  "platform": "win32",
+  "model": {
+    "name": "qwen3:4b",
+    "digest": "359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+    "ollamaVersion": "0.40.16"
+  },
+  "cost": {
+    "externalApiCalls": 0,
+    "measuredDollars": null
+  },
+  "inputs": {
+    "engine.mjs": "0e6104be28b63a1de835f6fc06364758552e6b320191bd8e384e9b335b3864df",
+    "ollama.mjs": "b6bc9999c318d2223fec6123c56e7ac8a99eb033c3a3ae6da0231ab0a6c9b4a1",
+    "public/contract.mjs": "d18a618a8669b931decfe663ef215e646f45b85b78eba282e5156c8e5ebfb1a4",
+    "evaluation/run.mjs": "6ce9cf5a9de1c4b0f84db2660a4ba83b39577b03718376f5da2df601a8dd2ef8",
+    "evaluation/score.mjs": "ff49dac71bb81b846b068010ddbc0c5098bdd51812d792684dbd4bd9c2c18100",
+    "evaluation/dev.json": "4a4a4bed5e6b6b02c6471b028a0b5f645720a44b4e9c8fb033b7e9e5cfb5ade0",
+    "evaluation/dev-key.json": "28a9089dd6c09c1e5a17b3908003e9354454b90a00d9ae8039c81cdfa8fa3cff",
+    "examples/support.json": "7d7a290f7624469df36fbb9bbecd7a9e447438a99ec86ad35b971b294ffe1599",
+    "examples/support-ollama.json": "fe80ab423b0772881e00c9ceb942bec34c545347561fefed8614fbae4858725d"
+  },
+  "summary": {
+    "local-stub": {
+      "correct": 8,
+      "total": 8,
+      "invalid": 0,
+      "abstentions": 0,
+      "failures": 0,
+      "medianMs": 0.164,
+      "p95Ms": 1.131,
+      "calls": 8
+    },
+    "ollama": {
+      "correct": 5,
+      "total": 8,
+      "invalid": 0,
+      "abstentions": 0,
+      "failures": 0,
+      "medianMs": 134.711,
+      "p95Ms": 394.915,
+      "calls": 8
+    }
+  },
+  "rows": [
+    {
+      "id": "dev-01",
+      "provider": "local-stub",
+      "expected": "billing",
+      "predicted": "billing",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 1.131,
+      "error": null
+    },
+    {
+      "id": "dev-01",
+      "provider": "ollama",
+      "expected": "billing",
+      "predicted": "billing",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 394.915,
+      "error": null
+    },
+    {
+      "id": "dev-02",
+      "provider": "local-stub",
+      "expected": "billing",
+      "predicted": "billing",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 0.273,
+      "error": null
+    },
+    {
+      "id": "dev-02",
+      "provider": "ollama",
+      "expected": "billing",
+      "predicted": "billing",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 159.88,
+      "error": null
+    },
+    {
+      "id": "dev-03",
+      "provider": "local-stub",
+      "expected": "account",
+      "predicted": "account",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 0.201,
+      "error": null
+    },
+    {
+      "id": "dev-03",
+      "provider": "ollama",
+      "expected": "account",
+      "predicted": "account",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 132.098,
+      "error": null
+    },
+    {
+      "id": "dev-04",
+      "provider": "local-stub",
+      "expected": "account",
+      "predicted": "account",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 0.141,
+      "error": null
+    },
+    {
+      "id": "dev-04",
+      "provider": "ollama",
+      "expected": "account",
+      "predicted": "billing",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 135.938,
+      "error": null
+    },
+    {
+      "id": "dev-05",
+      "provider": "local-stub",
+      "expected": "technical",
+      "predicted": "technical",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 0.187,
+      "error": null
+    },
+    {
+      "id": "dev-05",
+      "provider": "ollama",
+      "expected": "technical",
+      "predicted": "technical",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 131.41,
+      "error": null
+    },
+    {
+      "id": "dev-06",
+      "provider": "local-stub",
+      "expected": "technical",
+      "predicted": "technical",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 0.123,
+      "error": null
+    },
+    {
+      "id": "dev-06",
+      "provider": "ollama",
+      "expected": "technical",
+      "predicted": "technical",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 128.673,
+      "error": null
+    },
+    {
+      "id": "dev-07",
+      "provider": "local-stub",
+      "expected": "other",
+      "predicted": "other",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 0.066,
+      "error": null
+    },
+    {
+      "id": "dev-07",
+      "provider": "ollama",
+      "expected": "other",
+      "predicted": "billing",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 156.129,
+      "error": null
+    },
+    {
+      "id": "dev-08",
+      "provider": "local-stub",
+      "expected": "other",
+      "predicted": "other",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 0.069,
+      "error": null
+    },
+    {
+      "id": "dev-08",
+      "provider": "ollama",
+      "expected": "other",
+      "predicted": "billing",
+      "outcome": "label",
+      "calls": 1,
+      "elapsedMs": 133.484,
+      "error": null
+    }
+  ]
+}
