@@ -51,7 +51,7 @@ On Windows, if Chrome cancels the native save, try setting both TEMP and TMP to 
 The Model node can use `provider: "ollama"`, `model: "qwen3:4b"`, `mode: "classify"` instead of the stub. See [examples/support-ollama.json](examples/support-ollama.json). Calls stay on this computer. Nothing is sent unless the server or CLI process was started with the opt-in variable.
 
 1. Start Ollama and pull the model once: `ollama serve`, then `ollama pull qwen3:4b`.
-2. Check the integration: `npm run smoke:ollama`. Running this script is the opt-in; it enables the adapter only for the CLI processes it starts. It checks one constrained call per run, the label, the bounds and the exit code. It is not a quality evaluation.
+2. Check the integration: `npm run smoke:ollama`. Running this script is the opt-in; it enables the adapter only for the CLI processes it starts. For each run it checks the exit code, the provider, exactly one reported call and an allowed label. Byte limits and timeout handling are covered by the core and adapter tests, which exercise the deadline with the stub's 750 ms limit; the Ollama 15 s and 16 s values are configuration and not separately tested. It is not a quality evaluation.
 3. To use it in the editor, start the server with the variable set. PowerShell: `$env:RELAY_ENABLE_OLLAMA='1'; node server.mjs`. POSIX shells: `RELAY_ENABLE_OLLAMA=1 node server.mjs`. In the Model inspector, choose **Ollama · qwen3:4b**.
 
 | Variable | Default | Effect |

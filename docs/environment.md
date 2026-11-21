@@ -19,7 +19,7 @@ Additional components used by the MVP:
 | --- | --- | --- |
 | Ollama | 0.40.16 | MIT, separately installed optional inference service. [License](https://github.com/ollama/ollama/blob/main/LICENSE) |
 | qwen3:4b | Q4_K_M, digest 359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7 | Local model metadata returned Apache License 2.0. Weights are obtained separately. |
-| actions/checkout, actions/setup-node | Exact commit SHAs in the CI workflow | Both are MIT. Used to bootstrap the hosted runner. Core checks have zero package-install steps and run offline. |
+| actions/checkout, actions/setup-node | Exact commit SHAs in the CI workflow | Both are MIT. Used to bootstrap the hosted runner. Core checks have zero package-install steps and can run offline. The hosted workflow is configured to run them offline; verification on a GitHub-hosted runner is pending. |
 
 Original project source is offered under MIT. No third-party source, fonts, images, browser builds or provider packages are bundled.
 
