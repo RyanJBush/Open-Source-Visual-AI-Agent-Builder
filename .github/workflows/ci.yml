@@ -13,5 +13,5 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version-file: .nvmrc
-      - run: npm test
-      - run: node cli.mjs examples/support.json
+      - name: Test without external network access
+        run: bash .github/ci/offline.sh
